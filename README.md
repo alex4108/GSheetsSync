@@ -19,6 +19,7 @@ $invitees - Broken!  Workaround by sharing the entire calendar via Google Calend
 $firstName - First name as it appears on the schedule
 $lastName - Last name as it appears on schedule.  Any - MGR or additional entries will be placed here
 $calendarName - The name of the calendar you wish to copy the events to, as it appears in google.
+APP_PATH - The path where this application lives.  On windows, replace \ in the windows path with / in the APP_PATH.  
 
 * Dependencies
 XAMPP - download at xampp.org

@@ -9,6 +9,7 @@ $lastName = "Schittko";
 $calendarName = "Shifts (Develop)";
 $leftBound = "BN";
 $rightBound = "CA";
+define('APP_PATH', 'C:/Users/alex4/source/repos/granburyScheduleSync'); ## NO TRAILING SLASH
 
 /*************************************************************
 STOP CONFIGURING HERE!
@@ -19,14 +20,14 @@ TODO
 * Add a switch to support emptying the calendar, in case we write too many times
 * Handle Google OAuth in a WebForm
 * WebForm to handle configuration options
-
+*/
 
 require_once __DIR__ . '/vendor/autoload.php';
 require_once 'functions.php';
 
-define('CREDENTIALS_PATH', 'C:/Users/aschittko/Documents/granburyScheduleSync/credentials/sheets.googleapis.com-calendarSync.json');
-define('CREDENTIALS_PATH2', 'C:/Users/aschittko/Documents/granburyScheduleSync/credentials/sheets.googleapis.com-calendarSync-2.json');
-define('CLIENT_SECRET_PATH', 'C:/Users/aschittko/Documents/granburyScheduleSync/credentials/client_secret_976487652194-cc9ht4e0g1g095htrbij0o4civ6sa7bo.apps.googleusercontent.com.json');
+define('CREDENTIALS_PATH', APP_PATH . '/credentials/sheets.googleapis.com-calendarSync-GRANBURY.json');
+define('CREDENTIALS_PATH2', APP_PATH . '/credentials/sheets.googleapis.com-calendarSync-GMAIL.json');
+define('CLIENT_SECRET_PATH', APP_PATH . '/client_secret_976487652194-cc9ht4e0g1g095htrbij0o4civ6sa7bo.apps.googleusercontent.com.json');
 $client = getClient();
 $calendarService = new Google_Service_Calendar($client);
 
