@@ -3,10 +3,13 @@ ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 /***********************************************************
 CONFIG SECTION -- SET THESE VARIABLES CAREFULLY!
 ************************************************************/
-
+$version = 1.1;
 $firstName = "Alex";
 $lastName = "Schittko";
-$invitees = array("hollylouiseburrow@gmail.com", "christoph@bracketangles.net", "hwill7397@gmail.com");
+$calendarName = "Shifts (Develop)";
+$leftBound = "BU";
+$rightBound = "CA";
+define('APP_PATH', 'C:/Users/alex4/source/repos/granburyScheduleSync'); ## NO TRAILING SLASH
 
 /*************************************************************
 STOP CONFIGURING HERE!
@@ -15,9 +18,9 @@ STOP CONFIGURING HERE!
 require_once __DIR__ . '/vendor/autoload.php';
 require_once 'functions.php';
 
-define('CREDENTIALS_PATH', 'C:/Users/alex4/credentials/sheets.googleapis.com-calendarSync.json');
-define('CLIENT_SECRET_PATH', __DIR__ . '/client_secret_976487652194-cc9ht4e0g1g095htrbij0o4civ6sa7bo.apps.googleusercontent.com.json');
-
+define('CREDENTIALS_PATH', APP_PATH . '/credentials/sheets.googleapis.com-calendarSync-GRANBURY.json');
+define('CREDENTIALS_PATH2', APP_PATH . '/credentials/sheets.googleapis.com-calendarSync-GMAIL.json');
+define('CLIENT_SECRET_PATH', APP_PATH . '/client_secret_976487652194-cc9ht4e0g1g095htrbij0o4civ6sa7bo.apps.googleusercontent.com.json');
 $client = getClient();
 $calendarService = new Google_Service_Calendar($client);
 
@@ -68,10 +71,9 @@ class SHEET_FUNCTIONS {
 
 
 	function getDates(  ) {
-		$range = "Master!A1:" . $this->rightBoundary . "2";
+		$range = "Master!" . $this->leftBoundary . "1:" . $this->rightBoundary . "2";
 		
 		// The A1 notation of the values to retrieve.
-
 		$data = $this->getSpreadsheet( $range );
 		return $data;
 		
@@ -92,11 +94,10 @@ class SHEET_FUNCTIONS {
 		*/
 	function getSchedule( $userRow ) {
 		$dates = $this->getDates(  );
-	
-	//	echo strtotime("31-JAN");
+		
 		$schedule = array();
 	
-		foreach( $dates as $keyUpper => $valueUpper ) {
+		foreach( $dates as $keyUpper => $valueUpper ) { // Encode the Date on each entry
 			foreach( $valueUpper as $key => $value ) {
 				
 				
@@ -140,10 +141,10 @@ class SHEET_FUNCTIONS {
 		$scheduleRow = $this->getSpreadsheet( 'Master!' . $this->leftBoundary . $this->userRow . ':' . $this->rightBoundary . $this->userRow);
 		
 		//print_r($scheduleRow[0]);
+		//die();
 		
 		
-		
-		foreach( $schedule as $k => $v ) {
+		foreach( $schedule as $k => $v ) { // Encode the time on each entry
 			
 			$scheduleIn = null;
 			$scheduleOut = null;
@@ -221,19 +222,19 @@ class SHEET_FUNCTIONS {
 
 
 class CALENDAR_FUNCTIONS {
-	function __construct( $firstName, $eventsToSchedule, $calendarName, $attendees ) {
-			$this->client = getClient();
+	function __construct( $firstName, $eventsToSchedule, $calendarName ) {
+			$this->client = getClient2();
 			$this->firstName = $firstName;
 			$this->s = new Google_Service_Calendar($this->client);
 			$this->eventsToSchedule = $eventsToSchedule;
 			$this->calendarName = $calendarName;
-			$this->attendees = $attendees;
 			$this->timezone_word = "America/Chicago";
-			$this->timezone_numeric = "-06:00";
+			$this->timezone_numeric = "-05:00";
 			// Set a calendar to write to
 			foreach( $this->s->calendarList->listCalendarList()->getItems() as $k => $cal) {
-				if ($cal->summary == $calendarName) {
+				if ($cal->summary == $this->calendarName) {
 					$this->calendar = $this->s->calendarList->listCalendarList()[$k];
+					//print_r($this->calendar);
 				}
 			}
 	}
@@ -271,7 +272,6 @@ class CALENDAR_FUNCTIONS {
 	}	
 	
 	function parseSchedule ( $schedule ){
-		define('EVENT_EXISTS', false);
 		
 		
 		$optParams = array(
@@ -283,19 +283,20 @@ class CALENDAR_FUNCTIONS {
 		// Get all events for comparison
 		$this->calendarEvents = $this->s->events->listEvents($this->calendar->id, $optParams);
 				
-		
+		/*
 		if ( count($this->calendarEvents->getItems()) == 0 ) {
-			return false;
+			print "No events on Calendar. \n";
 		}
-		
+		*/
 		
 		// Parse events on schedul
 		foreach( $schedule as $k => $v ) {
-			if (in_array($v['dayType'], $this->eventsToSchedule)) {
+			if (in_array($v['dayType'], $this->eventsToSchedule)) { 
 				// Get the Time Strings to put in the API call
 					
 					$formatted_timeString = "YYYY-MM-DDTHH:MM:00";
-					
+					$hour = substr( $v['scheduleIn'], 0, 2 );
+					//print_r("HOUR: . " . $hour . "\n");
 					$timeString_in = $v['date'] . "T" . substr( $v['scheduleIn'], 0, 2 ) . ":00:00";
 					//$v['scheduleOut'] = "2AM";
 					
@@ -322,7 +323,7 @@ class CALENDAR_FUNCTIONS {
 							case 0: 
 								$params = array();
 								$weekdays = array("MON", "TUE", "WED", "THU", "FRI");
-								if ( in_array($v['dateCode'], $weekdays) ) {
+								if ( in_array($v['dateCode'], $weekdays) && $hour < 12) {
 										$thisEventData['title'] = $this->firstName . " @ Office";
 								}
 								else {
@@ -349,34 +350,31 @@ class CALENDAR_FUNCTIONS {
 						}
 								
 						// Add recipients
-						
+						/*
 						$thisEventData['attendees'] = array();
 						foreach( $this->attendees as $a ) {
 								array_push( $thisEventData['attendees'], $a );
 						}
-						
-						print_r($thisEventData);
-						// Create the event!
-
-						
-						$event = new Google_Service_Calendar_Event(array(
-							'summary' => $thisEventData['title'],
-							'start' => array(
-								'dateTime' => $thisEventData['time_in'].$this->timezone_numeric,
-								'timeZone' => $this->timezone_word,
-							),
-							'end' => array(
-								'dateTime' => $thisEventData['time_out'].$this->timezone_numeric,
-								'timeZone' => $this->timezone_word,
-							),
-							'attendees' => $thisEventData['attendees'],
-							'reminders' => array(
-								'useDefault' => TRUE,
-							)
-							)
+						*/
+						$eventParams = array(
+						'summary' => $thisEventData['title'],
+						'start' => array(
+							'dateTime' => $thisEventData['time_in'].$this->timezone_numeric,
+							'timeZone' => $this->timezone_word,
+						),
+						'end' => array(
+							'dateTime' => $thisEventData['time_out'].$this->timezone_numeric,
+							'timeZone' => $this->timezone_word,
+						),
+						//'attendees' => $thisEventData['attendees'],
+						'reminders' => array(
+							'useDefault' => TRUE,
+						)
 						);
+						print_r($eventParams);
+						$event = new Google_Service_Calendar_Event( $eventParams );
 						$event = $this->s->events->insert($this->calendar->id, $event);
-						printf('Event created: %s\n', $event->htmlLink);
+						printf("Event created: %s \n", $event->htmlLink);
 						// Create calendar event for this schedule entry
 					}
 					
@@ -390,13 +388,10 @@ class CALENDAR_FUNCTIONS {
 }
 // Comma separated list, 0 - WORK, 1- PTO (Lime Green), 2- OFF (Gray), 3 - HOLIDAY (YELLOW), 4 - EMERGENCY SUPPORT (DARKBLUE)
 $permitted_events = array(0, 1, 4);
-$calendarName = "Shifts";
-$attendees = array("christoph@bracketangles.net", "hollylouiseburrow@gmail.com", "hwill7397@gmail.com");
 
-$sheets = new SHEET_FUNCTIONS("B", "BL", $firstName, $lastName);
-$calendar = new CALENDAR_FUNCTIONS( $firstName, $permitted_events, $calendarName, $attendees );
-print ('User Row: ' . $sheets->getUserRow() . "\n");
-print('Schedule: ');
+$sheets = new SHEET_FUNCTIONS($leftBound, $rightBound, $firstName, $lastName);
+$calendar = new CALENDAR_FUNCTIONS( $firstName, $permitted_events, $calendarName );
 $schedule = $sheets->getSchedule( $sheets->getUserRow() );
+
 //$calendar->sample();
-$calendar->parseSchedule( $schedule );
+print_r( $calendar->parseSchedule( $schedule ) );
