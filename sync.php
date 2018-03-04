@@ -7,20 +7,13 @@ $version = 1.1;
 $firstName = "Alex";
 $lastName = "Schittko";
 $calendarName = "Shifts (Develop)";
-$leftBound = "BN";
+$leftBound = "BU";
 $rightBound = "CA";
 define('APP_PATH', 'C:/Users/alex4/source/repos/granburyScheduleSync'); ## NO TRAILING SLASH
 
 /*************************************************************
 STOP CONFIGURING HERE!
 ************************************************************/
-/****
-TODO
-
-* Add a switch to support emptying the calendar, in case we write too many times
-* Handle Google OAuth in a WebForm
-* WebForm to handle configuration options
-*/
 
 require_once __DIR__ . '/vendor/autoload.php';
 require_once 'functions.php';
@@ -236,7 +229,7 @@ class CALENDAR_FUNCTIONS {
 			$this->eventsToSchedule = $eventsToSchedule;
 			$this->calendarName = $calendarName;
 			$this->timezone_word = "America/Chicago";
-			$this->timezone_numeric = "-06:00";
+			$this->timezone_numeric = "-05:00";
 			// Set a calendar to write to
 			foreach( $this->s->calendarList->listCalendarList()->getItems() as $k => $cal) {
 				if ($cal->summary == $this->calendarName) {
@@ -303,7 +296,7 @@ class CALENDAR_FUNCTIONS {
 					
 					$formatted_timeString = "YYYY-MM-DDTHH:MM:00";
 					$hour = substr( $v['scheduleIn'], 0, 2 );
-					
+					//print_r("HOUR: . " . $hour . "\n");
 					$timeString_in = $v['date'] . "T" . substr( $v['scheduleIn'], 0, 2 ) . ":00:00";
 					//$v['scheduleOut'] = "2AM";
 					
@@ -363,26 +356,23 @@ class CALENDAR_FUNCTIONS {
 								array_push( $thisEventData['attendees'], $a );
 						}
 						*/
-						print_r($thisEventData);
-						// Create the event!
-
-						
-						$event = new Google_Service_Calendar_Event(array(
-							'summary' => $thisEventData['title'],
-							'start' => array(
-								'dateTime' => $thisEventData['time_in'].$this->timezone_numeric,
-								'timeZone' => $this->timezone_word,
-							),
-							'end' => array(
-								'dateTime' => $thisEventData['time_out'].$this->timezone_numeric,
-								'timeZone' => $this->timezone_word,
-							),
-							//'attendees' => $thisEventData['attendees'],
-							'reminders' => array(
-								'useDefault' => TRUE,
-							)
-							)
+						$eventParams = array(
+						'summary' => $thisEventData['title'],
+						'start' => array(
+							'dateTime' => $thisEventData['time_in'].$this->timezone_numeric,
+							'timeZone' => $this->timezone_word,
+						),
+						'end' => array(
+							'dateTime' => $thisEventData['time_out'].$this->timezone_numeric,
+							'timeZone' => $this->timezone_word,
+						),
+						//'attendees' => $thisEventData['attendees'],
+						'reminders' => array(
+							'useDefault' => TRUE,
+						)
 						);
+						print_r($eventParams);
+						$event = new Google_Service_Calendar_Event( $eventParams );
 						$event = $this->s->events->insert($this->calendar->id, $event);
 						printf("Event created: %s \n", $event->htmlLink);
 						// Create calendar event for this schedule entry

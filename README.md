@@ -37,8 +37,8 @@ Once PHP is installed, open a command line by holding the Windows Key and R, the
 On the terminal, type: C:\xampp\php\php.exe -f <Path-To-This-Folder>\sync.php
 
 * Common Errors
-If you get an error about a refresh token, navigate to the credentials/ folder, and delete all entries EXCEPT client_secret*
-This will require you to re authenticate the app with both Google accounts.
+If you get an error about a refresh token, navigate to the credentials/ folder, and delete all entries.
+This is due to the fact that I don't support refresh tokens yet.  This will get implemented in the future.
 
 ### Who do I talk to? ###
 
