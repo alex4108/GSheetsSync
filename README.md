@@ -19,6 +19,7 @@ $invitees - Broken!  Workaround by sharing the entire calendar via Google Calend
 $firstName - First name as it appears on the schedule
 $lastName - Last name as it appears on schedule.  Any - MGR or additional entries will be placed here
 $calendarName - The name of the calendar you wish to copy the events to, as it appears in google.
+APP_PATH - The path where this application lives.  On windows, replace \ in the windows path with / in the APP_PATH.  
 
 * Dependencies
 XAMPP - download at xampp.org
@@ -36,8 +37,8 @@ Once PHP is installed, open a command line by holding the Windows Key and R, the
 On the terminal, type: C:\xampp\php\php.exe -f <Path-To-This-Folder>\sync.php
 
 * Common Errors
-If you get an error about a refresh token, navigate to the credentials/ folder, and delete all entries EXCEPT client_secret*
-This will require you to re authenticate the app with both Google accounts.
+If you get an error about a refresh token, navigate to the credentials/ folder, and delete all entries.
+This is due to the fact that I don't support refresh tokens yet.  This will get implemented in the future.
 
 ### Who do I talk to? ###
 
